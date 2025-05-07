@@ -171,7 +171,7 @@ if __name__ == '__main__':
     RESULT_FILE = '666'
     if not os.path.exists(PRETRAINED_DIR):
         os.mkdir(PRETRAINED_DIR)
-    model.visual_encoder, _ = load_checkpoint(model.visual_encoder, 'model_base_capfilt_large.pth')
+    model.visual_encoder, _ = load_checkpoint(model.visual_encoder, f'{PRETRAINED_DIR}/model_base_capfilt_large.pth')
     model.load_state_dict(torch.load(
         "pytorch_model.bin", map_location=device))
     model = model.to(device)

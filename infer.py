@@ -20,6 +20,7 @@ from configs.config           import MAX_LENGTH, IN_CHANNEL
 
 DEFAULT_IMG = "cat.jpg"
 device      = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+PRETRAINED_DIR = 'pretrained_ckpt'
 
 # ───────────────────────── argparse ──────────────────────────
 def get_args():
@@ -39,7 +40,7 @@ def build_model():
     model = Diffuser_with_LN(image_size=224)
     model.visual_encoder, _ = load_checkpoint(
         model.visual_encoder,
-        "model_base_capfilt_large.pth"
+        f'{PRETRAINED_DIR}/model_base_capfilt_large.pth'
     )
     state = torch.load(
         "pytorch_model.bin",

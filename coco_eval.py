@@ -8,7 +8,7 @@ from torch import nn
 from diff_models.diffcap_model import Diffuser, Diffuser_with_LN
 from my_utils.blip_util import load_checkpoint
 import json
-device = torch.device('cuda:0')
+device      = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 from pycocotools.coco import COCO
 from pycocoevalcap.eval import COCOEvalCap
 from torchvision.datasets.utils import download_url

@@ -18,7 +18,7 @@ from my_utils.blip_util       import load_checkpoint
 from coco_eval                import inference
 from configs.config           import MAX_LENGTH, IN_CHANNEL
 
-DEFAULT_IMG = "cat.jpg"
+DEFAULT_IMG = "web.jpg"
 device      = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 PRETRAINED_DIR = 'pretrained_ckpt'
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#infer.py
 """
 single_infer.py  —  caption one image with LaDiC
 
@@ -16,12 +16,13 @@ from transformers import BertTokenizer
 from diff_models.diffcap_model import Diffuser_with_LN
 from my_utils.blip_util       import load_checkpoint
 from coco_eval                import inference
-from configs.config           import MAX_LENGTH, IN_CHANNEL
+# from configs.config           import MAX_LENGTH, IN_CHANNEL
 
 DEFAULT_IMG = "web.jpg"
 device      = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 PRETRAINED_DIR = 'pretrained_ckpt'
-
+MAX_LENGTH = 24
+IN_CHANNEL = 768
 # ───────────────────────── argparse ──────────────────────────
 def get_args():
     parser = argparse.ArgumentParser(

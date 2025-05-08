@@ -203,14 +203,14 @@ for epoch in range(start_epoch, EPOCH_NUM):
     accelerator.print('after a epoch training', (time.time() - start_time) / 60, 'min')
     accelerator.wait_for_everyone()
     accelerator.print('after sync', (time.time() - start_time) / 60, 'min')
-    # l, x_t_loss, x_1_loss, prob_loss, valid_token_loss, pad_loss = validate(model)
-    # accelerator.log({'val_loss': l,
-    #                          'val_x_t_loss': x_t_loss,
-    #                          'val_x_1_loss': x_1_loss,
-    #                          'val_prob_loss': prob_loss,
-    #                          'val_valid_token_loss': valid_token_loss,
-    #                          'val_pad_loss': pad_loss}
-    #                         )
+    l, x_t_loss, x_1_loss, prob_loss, valid_token_loss, pad_loss = validate(model)
+    accelerator.log({'val_loss': l,
+                             'val_x_t_loss': x_t_loss,
+                             'val_x_1_loss': x_1_loss,
+                             'val_prob_loss': prob_loss,
+                             'val_valid_token_loss': valid_token_loss,
+                             'val_pad_loss': pad_loss}
+                            )
     # unwrapped_model = accelerator.unwrap_model(model)
     # accelerator.save(unwrapped_model.state_dict(), f"./checkpoint/{MODEL_NAME}/epoch_{epoch}.pickle")
     # model = model.to(accelerator.device)

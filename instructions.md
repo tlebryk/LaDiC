@@ -19,7 +19,7 @@ python infer.py
 
 Run training: (see readme)
 ```bash
-accelerate launch main.py [--args]
+accelerate launch main.py --epoch 2
 ```
 
 ## Running directly over modal

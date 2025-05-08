@@ -9,7 +9,7 @@ from datetime import timedelta
 from transformers import BertTokenizer, BertForMaskedLM
 
 init_kwargs = InitProcessGroupKwargs(timeout=timedelta(seconds=120 * 60))
-accelerator = Accelerator(log_with="wandb", kwargs_handlers=[init_kwargs])
+accelerator = Accelerator( kwargs_handlers=[init_kwargs])
 
 # helper functions
 def setup_seed(seed):

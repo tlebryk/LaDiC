@@ -85,7 +85,7 @@ class coco_karpathy_caption_eval(Dataset):
 
         img_id = ann['image'].split('/')[-1].strip('.jpg').split('_')[-1]
         return {'image': image,
-                'img_id': int(img_id),
+                'img_id': ann['image_id'],
                 'index':index
                 }
 

@@ -64,7 +64,6 @@ class coco_karpathy_caption_eval(coco_karpathy_train):
         '''
         url = 'https://storage.googleapis.com/sfr-vision-language-research/datasets/coco_karpathy_val.json'
         filename = f'{split}.json'
-
         download_url(url, ann_root)
 
         self.annotation = json.load(open(os.path.join(ann_root, filename), 'r'))

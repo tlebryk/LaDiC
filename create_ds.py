@@ -90,7 +90,7 @@ def create_json_file(file_pairs, output_path, image_prefix=""):
     print(f"Created {output_path} with {len(data)} entries")
 
 # Usage
-input_directory = "datasets/COCO/web"
+input_directory = "datasets/COCO/web/all_data"
 output_directory = "datasets/COCO"
 image_prefix = ""  # No prefix by default
 

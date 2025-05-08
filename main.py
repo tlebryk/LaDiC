@@ -26,17 +26,17 @@ wandb_configs = {
 
 accelerator.init_trackers('Diff-Cap', config=wandb_configs,
                           init_kwargs={"wandb": {"name": notes}})  # , "entity": "xxx"}})
-if not USING_TIME_LN:
-    model = Diffuser(image_size=224)
-else:
-    model = Diffuser_with_LN(image_size=224)
 
 
-data_config = {'image_size':224, 'ann_root':'datasets/COCO/', 'image_root': 'datasets/COCO/web'}
+data_config = {'image_size':224, 'ann_root':'datasets/COCO/', 'image_root': 'datasets/COCO/web/all_data'}
 train_set, val_set, test_set = create_dataset('caption_coco', data_config)
 train_loader = DataLoader(train_set, shuffle=True, batch_size=TRAIN_BATCH_SIZE, drop_last=True, num_workers=32)
 val_loader = DataLoader(val_set, shuffle=False, batch_size=VAL_BATCH_SIZE, drop_last=True, num_workers=2)
 
+if not USING_TIME_LN:
+    model = Diffuser(image_size=224)
+else:
+    model = Diffuser_with_LN(image_size=224)
 optimizer = optim.AdamW(filter(lambda p: p.requires_grad, model.parameters()), lr=LEARNING_RATE)
 num_step = len(train_loader) * EPOCH_NUM
 scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=num_step * WARMUP_RATIO,

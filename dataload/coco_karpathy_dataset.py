@@ -16,7 +16,7 @@ class coco_karpathy_train(Dataset):
         ann_root (string): directory to store the annotation file
         '''
         url = 'https://storage.googleapis.com/sfr-vision-language-research/datasets/coco_karpathy_train.json'
-        filename = 'coco_karpathy_train.json'
+        filename = 'train.json'
 
         download_url(url, ann_root)
 
@@ -65,7 +65,7 @@ class coco_karpathy_caption_eval(Dataset):
         '''
         urls = {'val': 'https://storage.googleapis.com/sfr-vision-language-research/datasets/coco_karpathy_val.json',
                 'test': 'https://storage.googleapis.com/sfr-vision-language-research/datasets/coco_karpathy_test.json'}
-        filenames = {'val': 'coco_karpathy_val.json', 'test': 'coco_karpathy_test.json'}
+        filenames = {'val': 'val.json', 'test': 'test.json'}
 
         download_url(urls[split], ann_root)
 
@@ -99,7 +99,7 @@ class coco_karpathy_caption_eval(Dataset):
 #         '''
 #         urls = {'val': 'https://storage.googleapis.com/sfr-vision-language-research/datasets/coco_karpathy_val.json',
 #                 'test': 'https://storage.googleapis.com/sfr-vision-language-research/datasets/coco_karpathy_test.json'}
-#         filenames = {'val': 'coco_karpathy_val.json', 'test': 'coco_karpathy_test.json'}
+#         filenames = {'val': 'val.json', 'test': 'test.json'}
 #
 #         download_url(urls[split], ann_root)
 #

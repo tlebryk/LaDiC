@@ -75,10 +75,11 @@ def create_json_file(file_pairs, output_path, image_prefix=""):
         with open(gui_file, 'r') as f:
             gui_content = f.read().strip()
         
-        # Create an entry for this pair
+        # Create an entry for this pair, now including the image_id
         entry = {
             "image": f"{image_prefix}{base_name}.png",
-            "caption": [gui_content]
+            "caption": [gui_content],
+            "image_id": base_name  # Added image_id using the file name
         }
         
         data.append(entry)

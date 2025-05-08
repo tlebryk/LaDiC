@@ -153,8 +153,8 @@ def validate(model):
     return val_loss / len(val_loader), val_acc_x_t / len(val_loader), val_acc_x_1 / len(val_loader), val_acc_prob / len(
         val_loader),
 
-model, optimizer, train_loader, scheduler, X_MEAN, X_SIGMA = accelerator.prepare(
-    model, optimizer, train_loader, scheduler, X_MEAN, X_SIGMA
+model, optimizer, train_loader, val_loader, scheduler, X_MEAN, X_SIGMA = accelerator.prepare(
+    model, optimizer, train_loader, val_loader, scheduler, X_MEAN, X_SIGMA
 )
 
 if START_EPOCH > 0:

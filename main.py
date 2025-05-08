@@ -32,7 +32,7 @@ else:
     model = Diffuser_with_LN(image_size=224)
 
 
-data_config = {'image_size':224, 'ann_root':'datasets/COCO/', 'image_root': 'datasets/COCO'}
+data_config = {'image_size':224, 'ann_root':'datasets/COCO/', 'image_root': 'datasets/COCO/web'}
 train_set, val_set, test_set = create_dataset('caption_coco', data_config)
 train_loader = DataLoader(train_set, shuffle=True, batch_size=TRAIN_BATCH_SIZE, drop_last=True, num_workers=32)
 val_loader = DataLoader(val_set, shuffle=False, batch_size=VAL_BATCH_SIZE, drop_last=True, num_workers=2)

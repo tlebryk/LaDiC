@@ -1,7 +1,7 @@
 import os.path
 import warnings
 warnings.filterwarnings('ignore')
-from coco_eval import model_evaluate, coco_caption_eval
+from coco_eval import model_evaluate, coco_caption_eval, inference
 from torch import optim, nn
 #import tmp.diffcap_eval as diffcap_eval
 from diff_models.diffcap_model import Diffuser, Diffuser_with_LN
@@ -252,11 +252,17 @@ def validate(model):
     model.eval()
     with torch.no_grad():
         for batch_num, x in tqdm(enumerate(val_loader), disable=not accelerator.is_local_main_process):
-            l, x_t_loss, x_1_loss, prob_loss, valid_token_loss, pad_loss = train_func(model, optimizer, x, scheduler, train=False)
-            val_acc_x_t += x_t_loss
-            val_acc_x_1 += x_1_loss
-            val_acc_prob += prob_loss
-            val_loss += l
+            try:
+                if batch_num == 0:
+                    z = inference(x, model, tokenizer)
+                    print(z)
+                l, x_t_loss, x_1_loss, prob_loss, valid_token_loss, pad_loss = train_func(model, optimizer, x, scheduler, train=False)
+                val_acc_x_t += x_t_loss
+                val_acc_x_1 += x_1_loss
+                val_acc_prob += prob_loss
+                val_loss += l
+            except Exception as e:
+                print(e)
     model.train()
 
     return val_loss / len(val_loader), val_acc_x_t / len(val_loader), val_acc_x_1 / len(val_loader), val_acc_prob / len(

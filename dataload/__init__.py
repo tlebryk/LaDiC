@@ -43,7 +43,11 @@ def create_dataset(dataset, config, min_scale=0.5):
         val_dataset = para_eval(transform_test, tokenizer, image_root='/diffusion/datasets/ParaCap/val_img', ann_root='/diffusion/datasets/ParaCap', split='val')
         test_dataset = para_eval(transform_test, tokenizer, image_root='/diffusion/datasets/ParaCap/test_img', ann_root='/diffusion/datasets/ParaCap', split='test')
         return train_dataset, val_dataset, test_dataset
-    elif dataset=='pixcode'
+    elif dataset=='pixcode':
+        train_dataset = coco_karpathy_train(transform_train, tokenizer, image_root=config['image_root'], ann_root=config['ann_root'])
+        val_dataset = coco_karpathy_caption_eval(transform_test, tokenizer, image_root=config['image_root'], ann_root=config['ann_root'], split='val')
+        test_dataset = coco_karpathy_caption_eval(transform_test, tokenizer, image_root=config['image_root'], ann_root=config['ann_root'], split='test')
+        
 
 def create_sampler(datasets, shuffles, num_tasks, global_rank):
     samplers = []

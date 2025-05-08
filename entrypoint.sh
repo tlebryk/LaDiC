@@ -54,4 +54,4 @@ unzip datasets.zip -d /app/datasets/COCO/
 python create_ds.py
 
 # rm pix2code_datasets.zip
-accelerate launch main.py --epoch 1
+accelerate launch main.py --epoch 2

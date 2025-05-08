@@ -98,7 +98,12 @@ parser.add_argument('--object_mask_ratio', type=float, default=0.1, help='Object
 parser.add_argument('--using_ln', type=bool, default=False, help='Using LN')
 parser.add_argument('--using_time_ln', type=bool, default=False, help='Using time LN')
 parser.add_argument('--use_early_proj', type=bool, default=False, help='Use early projection')
-
+parser.add_argument(
+    "image",
+    nargs="?",
+    default="web.jpg",
+    help=f"Path to the image file (default: {"web.jpg"})"
+    )
 args = parser.parse_args()
 notes = args.notes
 

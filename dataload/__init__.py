@@ -43,7 +43,7 @@ def create_dataset(dataset, config, min_scale=0.5):
         val_dataset = para_eval(transform_test, tokenizer, image_root='/diffusion/datasets/ParaCap/val_img', ann_root='/diffusion/datasets/ParaCap', split='val')
         test_dataset = para_eval(transform_test, tokenizer, image_root='/diffusion/datasets/ParaCap/test_img', ann_root='/diffusion/datasets/ParaCap', split='test')
         return train_dataset, val_dataset, test_dataset
-
+    elif dataset=='pixcode'
 
 def create_sampler(datasets, shuffles, num_tasks, global_rank):
     samplers = []

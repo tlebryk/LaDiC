@@ -30,6 +30,11 @@ accelerator.init_trackers('Diff-Cap', config=wandb_configs,
 
 data_config = {'image_size':224, 'ann_root':'datasets/COCO/', 'image_root': 'datasets/COCO/web/all_data'}
 train_set, val_set, test_set = create_dataset('caption_coco', data_config)
+print(len(train_set), len(val_set), len(test_set))
+try:
+    print(f"{train_set[0]}, {val_set[0]}, {test_set[0]}")
+except Exception as e:
+    print(e)
 train_loader = DataLoader(train_set, shuffle=True, batch_size=TRAIN_BATCH_SIZE, drop_last=True, num_workers=32)
 val_loader = DataLoader(val_set, shuffle=False, batch_size=VAL_BATCH_SIZE, drop_last=True, num_workers=2)
 

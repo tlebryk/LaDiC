@@ -38,6 +38,11 @@ def create_train_val_test_split(input_dir, output_dir, train_ratio=0.8, val_rati
         if os.path.exists(png_file):
             paired_files.append((png_file, gui_file, base_name))
     
+    # Create a mapping of filenames to integer IDs
+    # Sort the files first to ensure consistent IDs across runs
+    sorted_file_list = sorted([base_name for _, _, base_name in paired_files])
+    id_mapping = {filename: i+1 for i, filename in enumerate(sorted_file_list)}
+    
     # Shuffle the data
     random.shuffle(paired_files)
     
@@ -52,14 +57,15 @@ def create_train_val_test_split(input_dir, output_dir, train_ratio=0.8, val_rati
     test_files = paired_files[val_end:]
     
     # Create and save splits with different caption formats
-    create_json_file(train_files, os.path.join(output_dir, "train.json"), image_prefix, caption_as_string=True)   # For train: caption as string
-    create_json_file(val_files, os.path.join(output_dir, "val.json"), image_prefix, caption_as_string=False)     # For val: caption as list
-    create_json_file(test_files, os.path.join(output_dir, "test.json"), image_prefix, caption_as_string=False)   # For test: caption as list
+    create_json_file(train_files, os.path.join(output_dir, "train.json"), image_prefix, id_mapping, caption_as_string=True)
+    create_json_file(val_files, os.path.join(output_dir, "val.json"), image_prefix, id_mapping, caption_as_string=False)
+    create_json_file(test_files, os.path.join(output_dir, "test.json"), image_prefix, id_mapping, caption_as_string=False)
     
     # Print summary
     print(f"Created splits with {len(train_files)} training samples, {len(val_files)} validation samples, and {len(test_files)} test samples")
+    print(f"Generated {len(id_mapping)} unique integer IDs for images")
 
-def create_json_file(file_pairs, output_path, image_prefix="", caption_as_string=False):
+def create_json_file(file_pairs, output_path, image_prefix="", id_mapping=None, caption_as_string=False):
     """
     Create a JSON file from a list of file pairs.
     
@@ -67,6 +73,7 @@ def create_json_file(file_pairs, output_path, image_prefix="", caption_as_string
         file_pairs: List of tuples (png_file, gui_file, base_name)
         output_path: Path to save the JSON file
         image_prefix: Optional prefix for image paths in the JSON
+        id_mapping: Dictionary mapping filenames to integer IDs
         caption_as_string: If True, caption will be a string; if False, caption will be a list
     """
     data = []
@@ -76,10 +83,13 @@ def create_json_file(file_pairs, output_path, image_prefix="", caption_as_string
         with open(gui_file, 'r') as f:
             gui_content = f.read().strip()
         
+        # Get the integer ID for this image
+        image_id = id_mapping.get(base_name, 0) if id_mapping else 0
+        
         # Create an entry for this pair
         entry = {
             "image": f"{image_prefix}{base_name}.png",
-            "image_id": base_name
+            "image_id": image_id  # Now using an integer ID
         }
         
         # Format caption based on parameter

@@ -58,7 +58,7 @@ def create_train_val_test_split(input_dir, output_dir, train_ratio=0.8, val_rati
     
     # Create and save splits with different caption formats
     create_json_file(train_files, os.path.join(output_dir, "train.json"), image_prefix, id_mapping, caption_as_string=True)
-    create_json_file(val_files, os.path.join(output_dir, "val.json"), image_prefix, id_mapping, caption_as_string=False)
+    create_json_file(val_files, os.path.join(output_dir, "val.json"), image_prefix, id_mapping, caption_as_string=True)
     create_json_file(test_files, os.path.join(output_dir, "test.json"), image_prefix, id_mapping, caption_as_string=False)
     
     # Print summary

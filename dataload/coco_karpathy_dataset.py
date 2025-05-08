@@ -55,39 +55,65 @@ class coco_karpathy_train(Dataset):
                 'input_ids': tokens['input_ids'].squeeze(),
                 'attention_mask': tokens['attention_mask'].squeeze()
         }
-
+        
 class coco_karpathy_caption_eval(Dataset):
-    def __init__(self, transform, tokenizer, image_root, ann_root, split):
+    def __init__(self, transform, tokenizer, image_root, ann_root, max_words=30, prompt=''):
         '''
         image_root (string): Root directory of images (e.g. coco/images/)
         ann_root (string): directory to store the annotation file
-        split (string): val or test
         '''
-        urls = {'val': 'https://storage.googleapis.com/sfr-vision-language-research/datasets/coco_karpathy_val.json',
-                'test': 'https://storage.googleapis.com/sfr-vision-language-research/datasets/coco_karpathy_test.json'}
-        filenames = {'val': 'val.json', 'test': 'test.json'}
+        url = 'https://storage.googleapis.com/sfr-vision-language-research/datasets/coco_karpathy_val.json'
+        filename = 'val.json'
 
-        download_url(urls[split], ann_root)
+        download_url(url, ann_root)
 
-        self.annotation = json.load(open(os.path.join(ann_root, filenames[split]), 'r'))
+        self.annotation = json.load(open(os.path.join(ann_root, filename), 'r'))
         self.transform = transform
         self.image_root = image_root
+        self.max_words = max_words
+        self.prompt = prompt
         self.tokenizer = tokenizer
-    def __len__(self):
-        return len(self.annotation)
 
-    def __getitem__(self, index):
-        ann = self.annotation[index]
+        self.img_ids = {}
+        n = 0
+        for ann in self.annotation:
+            img_id = ann['image_id']
+            if img_id not in self.img_ids.keys():
+                self.img_ids[img_id] = n
+                n += 1
 
-        image_path = os.path.join(self.image_root, ann['image'])
-        image = Image.open(image_path).convert('RGB')
-        image = self.transform(image)
+# class coco_karpathy_caption_eval(Dataset):
+#     def __init__(self, transform, tokenizer, image_root, ann_root, split):
+#         '''
+#         image_root (string): Root directory of images (e.g. coco/images/)
+#         ann_root (string): directory to store the annotation file
+#         split (string): val or test
+#         '''
+#         urls = {'val': 'https://storage.googleapis.com/sfr-vision-language-research/datasets/coco_karpathy_val.json',
+#                 'test': 'https://storage.googleapis.com/sfr-vision-language-research/datasets/coco_karpathy_test.json'}
+#         filenames = {'val': 'val.json', 'test': 'test.json'}
 
-        img_id = ann['image'].split('/')[-1].strip('.jpg').split('_')[-1]
-        return {'image': image,
-                'img_id': ann['image_id'],
-                'index':index
-                }
+#         download_url(urls[split], ann_root)
+
+#         self.annotation = json.load(open(os.path.join(ann_root, filenames[split]), 'r'))
+#         self.transform = transform
+#         self.image_root = image_root
+#         self.tokenizer = tokenizer
+#     def __len__(self):
+#         return len(self.annotation)
+
+#     def __getitem__(self, index):
+#         ann = self.annotation[index]
+
+#         image_path = os.path.join(self.image_root, ann['image'])
+#         image = Image.open(image_path).convert('RGB')
+#         image = self.transform(image)
+
+#         # img_id = ann['image'].split('/')[-1].strip('.jpg').split('_')[-1]
+#         return {'image': image,
+#                 'img_id': ann['image_id'],
+#                 'index':index
+#                 }
 
 
 # class coco_karpathy_retrieval_eval(Dataset):

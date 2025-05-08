@@ -56,14 +56,14 @@ class coco_karpathy_train(Dataset):
                 'attention_mask': tokens['attention_mask'].squeeze()
         }
         
-class coco_karpathy_caption_eval(Dataset):
-    def __init__(self, transform, tokenizer, image_root, ann_root, max_words=30, prompt=''):
+class coco_karpathy_caption_eval(coco_karpathy_train):
+    def __init__(self, transform, tokenizer, image_root, ann_root, max_words=30, prompt='', split='val'):
         '''
         image_root (string): Root directory of images (e.g. coco/images/)
         ann_root (string): directory to store the annotation file
         '''
         url = 'https://storage.googleapis.com/sfr-vision-language-research/datasets/coco_karpathy_val.json'
-        filename = 'val.json'
+        filename = f'{split}.json'
 
         download_url(url, ann_root)
 

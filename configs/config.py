@@ -102,7 +102,7 @@ parser.add_argument(
     "image",
     nargs="?",
     default="web.jpg",
-    help=f"Path to the image file (default: {"web.jpg"})"
+    help=f"Path to the image file (default: 'web.jpg')"
     )
 args = parser.parse_args()
 notes = args.notes

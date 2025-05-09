@@ -122,7 +122,7 @@ class coco_karpathy_caption_eval(coco_karpathy_train):
             "text": caption,
             "input_ids": tokens["input_ids"].squeeze(),
             "attention_mask": tokens["attention_mask"].squeeze(),
-            # "img_id": ann["image_id"],
+            "img_id": ann["image_id"],
         }
 
 

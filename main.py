@@ -448,8 +448,8 @@ if accelerator.is_local_main_process:
 # model = model.to(accelerator.device)
 accelerator.print("Done!")
 if accelerator.is_local_main_process:
-    # bleu = diffcap_eval.evaluate(model, val_set, val_loader)
-    # accelerator.log({'bleu': bleu})
+    bleu = diffcap_eval.evaluate(model, val_set, val_loader)
+    accelerator.log({"bleu": bleu})
     model_evaluate(model, val_set, val_loader)
     if not os.path.exists("result"):
         os.makedirs("result", exist_ok=True)

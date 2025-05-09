@@ -61,10 +61,11 @@ def build_model():
     if FULL_MODEL_PATH:
         state = torch.load(FULL_MODEL_PATH, map_location=device)
     else:
-        final_model_dir = f"{LOG_DIR}/{MODEL_NAME}"
-        state = torch.load(
-            os.path.join(final_model_dir, "pytorch_model.bin"), map_location=device
-        )
+        # final_model_dir = f"{LOG_DIR}/{MODEL_NAME}"
+        # state = torch.load(
+        #     os.path.join(final_model_dir, "pytorch_model.bin"), map_location=device
+        # )
+        state = torch.load("pytorch_model.bin", map_location=device)
     model.load_state_dict(state, strict=False)
     return model.to(device).eval()
 
@@ -425,6 +426,8 @@ if isinstance(model, DistributedDataParallel):
 
 if not os.path.exists(f"{LOG_DIR}/{MODEL_NAME}"):
     os.makedirs(f"{LOG_DIR}/{MODEL_NAME}", exist_ok=True)
+
+
 accelerator.print("start training")
 start_time = time.time()
 start_epoch = START_EPOCH
@@ -447,7 +450,6 @@ accelerator.log(
 )
 
 model.train()
-
 
 
 for epoch in range(start_epoch, EPOCH_NUM):

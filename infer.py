@@ -51,10 +51,11 @@ def build_model():
     if FULL_MODEL_PATH:
         state = torch.load(FULL_MODEL_PATH, map_location=device)
     else:
-        final_model_dir = f"{LOG_DIR}/{MODEL_NAME}"
-        state = torch.load(
-            os.path.join(final_model_dir, "pytorch_model.bin"), map_location=device
-        )
+        # final_model_dir = f"{LOG_DIR}/{MODEL_NAME}"
+        # state = torch.load(
+        #     os.path.join(final_model_dir, "pytorch_model.bin"), map_location=device
+        # )
+        state = torch.load("pytorch_model.bin", map_location=device)
     model.load_state_dict(state, strict=False)
     return model.to(device).eval()
 
@@ -76,7 +77,18 @@ tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
 # ─────────────────────────── main ────────────────────────────
 def main():
     # args = get_args()
+    model = build_model()
+
     img = prep(Image.open(IMAGE_PATH).convert("RGB")).unsqueeze(0).to(device)
+    img = (
+        prep(
+            Image.open(
+                "datasets/COCO/web/all_data/024D233C-5B4A-4096-9145-94C2CCDEF0CD.png"
+            ).convert("RGB")
+        )
+        .unsqueeze(0)
+        .to(device)
+    )
 
     sample = {
         "image": img,
@@ -84,7 +96,6 @@ def main():
         "img_id": torch.tensor([0], device=device),
     }
 
-    model = build_model()
     caption, _ = inference(sample, tokenizer, model)
     print("\nCaption:", caption[0])
 

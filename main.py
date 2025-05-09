@@ -424,7 +424,20 @@ for epoch in range(start_epoch, EPOCH_NUM):
     accelerator.print("after saving", (time.time() - start_time) / 60, "min")
 
 accelerator.wait_for_everyone()
-accelerator.save_state(f"{LOG_DIR}/{MODEL_NAME}/")
+if accelerator.is_local_main_process:
+    final_model_dir = f"{LOG_DIR}/{MODEL_NAME}"
+    os.makedirs(final_model_dir, exist_ok=True)
+
+    # Save the model state dict as pytorch_model.bin
+    torch.save(
+        unwrapped_model.state_dict(), os.path.join(final_model_dir, "pytorch_model.bin")
+    )
+
+    # Optionally, if it's a HuggingFace model and has a config, you can save that too
+    # if hasattr(unwrapped_model, 'config'):
+    #     unwrapped_model.config.to_json_file(os.path.join(final_model_dir, "config.json"))
+
+    accelerator.print(f"Model saved to {final_model_dir}/pytorch_model.bin")
 
 # unwrapped_model = accelerator.unwrap_model(model)
 # accelerator.save(unwrapped_model.state_dict(), f"./checkpoint/{MODEL_NAME}.pickle")

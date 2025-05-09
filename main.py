@@ -52,10 +52,27 @@ val_loader = DataLoader(
     val_set, shuffle=False, batch_size=VAL_BATCH_SIZE, drop_last=True, num_workers=2
 )
 
+
+def build_model():
+    model = Diffuser_with_LN(image_size=224)
+    model.visual_encoder, _ = load_checkpoint(
+        model.visual_encoder, f"{PRETRAINED_DIR}/model_base_capfilt_large.pth"
+    )
+    if FULL_MODEL_PATH:
+        state = torch.load(FULL_MODEL_PATH, map_location=device)
+    else:
+        final_model_dir = f"{LOG_DIR}/{MODEL_NAME}"
+        state = torch.load(
+            os.path.join(final_model_dir, "pytorch_model.bin"), map_location=device
+        )
+    model.load_state_dict(state, strict=False)
+    return model.to(device).eval()
+
+
 if not USING_TIME_LN:
     model = Diffuser(image_size=224)
 else:
-    model = Diffuser_with_LN(image_size=224)
+    model = build_model()
 optimizer = optim.AdamW(
     filter(lambda p: p.requires_grad, model.parameters()), lr=LEARNING_RATE
 )

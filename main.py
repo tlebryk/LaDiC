@@ -247,9 +247,13 @@ def train_func(model, trainer, x, scheduler, train=True):
     image, mask = x["image"].to(accelerator.device), x["attention_mask"].to(
         accelerator.device
     )
-    if CLASSIFIER_FREE_PROB > 0:
+    if CLASSIFIER_FREE_PROB > 0 and train:
+        if train:
+            train_batch_size = TRAIN_BATCH_SIZE
+        else:
+            train_batch_size = VAL_BATCH_SIZE
         classifier_mask = (
-            (torch.rand(TRAIN_BATCH_SIZE) > CLASSIFIER_FREE_PROB)
+            (torch.rand(train_batch_size) > CLASSIFIER_FREE_PROB)
             .type(torch.float32)
             .to(accelerator.device)
         )  # generate mask
@@ -313,19 +317,19 @@ def validate(model):
         for batch_num, x in tqdm(
             enumerate(val_loader), disable=not accelerator.is_local_main_process
         ):
-            try:
-                if batch_num == 0:
-                    z = inference(x, tokenizer, model)
-                    print(z)
-                l, x_t_loss, x_1_loss, prob_loss, valid_token_loss, pad_loss = (
-                    train_func(model, optimizer, x, scheduler, train=False)
-                )
-                val_acc_x_t += x_t_loss
-                val_acc_x_1 += x_1_loss
-                val_acc_prob += prob_loss
-                val_loss += l
-            except Exception as e:
-                print(e)
+            # try:
+            if batch_num == 0:
+                z = inference(x, tokenizer, model)
+                print(z)
+            l, x_t_loss, x_1_loss, prob_loss, valid_token_loss, pad_loss = train_func(
+                model, optimizer, x, scheduler, train=False
+            )
+            val_acc_x_t += x_t_loss
+            val_acc_x_1 += x_1_loss
+            val_acc_prob += prob_loss
+            val_loss += l
+        # except Exception as e:
+        #     print(e)
     model.train()
 
     return (

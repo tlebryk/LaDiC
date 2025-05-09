@@ -46,8 +46,10 @@ def build_model():
     model.visual_encoder, _ = load_checkpoint(
         model.visual_encoder, f"{PRETRAINED_DIR}/model_base_capfilt_large.pth"
     )
+    final_model_dir = f"{LOG_DIR}/{MODEL_NAME}"
+    os.makedirs(final_model_dir, exist_ok=True)
     state = torch.load(
-        os.path.join(MODEL_NAME, "pytorch_model.bin"), map_location=device
+        os.path.join(final_model_dir, "pytorch_model.bin"), map_location=device
     )
     model.load_state_dict(state, strict=False)
     return model.to(device).eval()

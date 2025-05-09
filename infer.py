@@ -9,8 +9,7 @@ $ python single_infer.py /path/to/other.jpg      # captions a different image
 """
 import os
 import argparse, sys, torch
-from PIL import Image
-from torchvision import transforms
+
 from transformers import BertTokenizer
 
 from diff_models.diffcap_model import Diffuser_with_LN
@@ -26,20 +25,6 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 PRETRAINED_DIR = "pretrained_ckpt"
 MAX_LENGTH = 24
 IN_CHANNEL = 768
-
-
-# ───────────────────────── argparse ──────────────────────────
-def get_args():
-    parser = argparse.ArgumentParser(
-        description="Generate a caption for a single image with LaDiC"
-    )
-    parser.add_argument(
-        "image",
-        nargs="?",
-        default=DEFAULT_IMG,
-        help=f"Path to the image file (default: {DEFAULT_IMG})",
-    )
-    return parser.parse_args()
 
 
 # ──────────────────────── model setup ────────────────────────
@@ -60,24 +45,27 @@ def build_model():
     return model.to(device).eval()
 
 
-prep = transforms.Compose(
-    [
-        transforms.Resize(
-            (224, 224), interpolation=transforms.InterpolationMode.BICUBIC
-        ),
-        transforms.ToTensor(),
-        transforms.Normalize(
-            (0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711)
-        ),
-    ]
-)
-tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
-
-
 # ─────────────────────────── main ────────────────────────────
 def main():
     # args = get_args()
     model = build_model()
+    tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+    # %%
+    from PIL import Image
+    from torchvision import transforms
+
+    prep = transforms.Compose(
+        [
+            transforms.Resize(
+                (224, 224), interpolation=transforms.InterpolationMode.BICUBIC
+            ),
+            transforms.ToTensor(),
+            transforms.Normalize(
+                (0.48145466, 0.4578275, 0.40821073),
+                (0.26862954, 0.26130258, 0.27577711),
+            ),
+        ]
+    )
 
     img = prep(Image.open(IMAGE_PATH).convert("RGB")).unsqueeze(0).to(device)
     img = (
@@ -98,6 +86,7 @@ def main():
 
     caption, _ = inference(sample, tokenizer, model)
     print("\nCaption:", caption[0])
+    # %%
 
 
 if __name__ == "__main__":

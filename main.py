@@ -88,7 +88,7 @@ scheduler = get_linear_schedule_with_warmup(
 
 tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
 special = tokenizer(["."], return_tensors="pt")
-special_emb = model.space_encoder(special["input_ids"])[0][0][1]
+special_emb = model.space_encoder(special["input_ids"].to(device))[0][0][1]
 import pandas as pd
 import os
 from datetime import datetime

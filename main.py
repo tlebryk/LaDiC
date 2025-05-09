@@ -51,6 +51,7 @@ train_loader = DataLoader(
 val_loader = DataLoader(
     val_set, shuffle=False, batch_size=VAL_BATCH_SIZE, drop_last=True, num_workers=2
 )
+PRETRAINED_DIR = "pretrained_ckpt"
 
 
 def build_model():

@@ -418,6 +418,34 @@ for epoch in range(start_epoch, EPOCH_NUM):
     acc_x_1 = 0
     acc_prob = 0
     acc_l = 0
+    accelerator.print("after sync", (time.time() - start_time) / 60, "min")
+    (
+        l,
+        x_t_loss,
+        x_1_loss,
+        prob_loss,
+    ) = validate(model)
+    accelerator.log(
+        {
+            "val_loss": l,
+            "val_x_t_loss": x_t_loss,
+            "val_x_1_loss": x_1_loss,
+            "val_prob_loss": prob_loss,
+            #  'val_valid_token_loss': valid_token_loss,
+            #  'val_pad_loss': pad_loss
+        }
+    )
+    # After validation, replace accelerator.log with:
+    val_metrics = {
+        "val_loss": l,
+        "val_x_t_loss": x_t_loss,
+        "val_x_1_loss": x_1_loss,
+        "val_prob_loss": prob_loss,
+        "epoch": epoch,
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+    }
+    log_to_csv(val_metrics, epoch * len(train_loader), is_validation=True)
+    accelerator.print(val_metrics)
 
     accelerator.print("the number of batchs is", len(train_loader))
     accelerator.print("before training", (time.time() - start_time) / 60, "min")
@@ -465,33 +493,7 @@ for epoch in range(start_epoch, EPOCH_NUM):
             break
     accelerator.print("after a epoch training", (time.time() - start_time) / 60, "min")
     accelerator.wait_for_everyone()
-    accelerator.print("after sync", (time.time() - start_time) / 60, "min")
-    (
-        l,
-        x_t_loss,
-        x_1_loss,
-        prob_loss,
-    ) = validate(model)
-    accelerator.log(
-        {
-            "val_loss": l,
-            "val_x_t_loss": x_t_loss,
-            "val_x_1_loss": x_1_loss,
-            "val_prob_loss": prob_loss,
-            #  'val_valid_token_loss': valid_token_loss,
-            #  'val_pad_loss': pad_loss
-        }
-    )
-    # After validation, replace accelerator.log with:
-    val_metrics = {
-        "val_loss": l,
-        "val_x_t_loss": x_t_loss,
-        "val_x_1_loss": x_1_loss,
-        "val_prob_loss": prob_loss,
-        "epoch": epoch,
-        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-    }
-    log_to_csv(val_metrics, epoch * len(train_loader), is_validation=True)
+
     # unwrapped_model = accelerator.unwrap_model(model)
     # accelerator.save(unwrapped_model.state_dict(), f"./checkpoint/{MODEL_NAME}/epoch_{epoch}.pickle")
     # model = model.to(accelerator.device)

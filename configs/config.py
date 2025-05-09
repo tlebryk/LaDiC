@@ -54,7 +54,7 @@ parser.add_argument(
     "--notes", type=str, default=None, help="Note to be included in the trial name"
 )
 parser.add_argument("--bsz", type=int, default=64, help="batch size")
-parser.add_argument("--seqlen", type=int, default=24, help="sequence length")
+parser.add_argument("--seqlen", type=int, default=144, help="sequence length")
 parser.add_argument("--epoch", type=int, default=60, help="epoch num")
 parser.add_argument("--resume_epoch", type=int, default=0, help="start epoch of resume")
 parser.add_argument("--resume_ckpt", type=str, default=None, help="resume or not")
@@ -101,7 +101,7 @@ parser.add_argument("--seed", type=int, default=3407, help="Random seed")
 parser.add_argument("--debug", type=bool, default=False, help="Debug mode")
 
 # Training hyperparameters
-parser.add_argument("--learning_rate", type=float, default=5e-5, help="Learning rate")
+parser.add_argument("--learning_rate", type=float, default=1e-5, help="Learning rate")
 parser.add_argument("--warmup_ratio", type=float, default=0.1, help="Warmup ratio")
 
 parser.add_argument(

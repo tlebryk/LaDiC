@@ -419,7 +419,12 @@ for epoch in range(start_epoch, EPOCH_NUM):
     acc_prob = 0
     acc_l = 0
     accelerator.print("after sync", (time.time() - start_time) / 60, "min")
-
+    (
+        l,
+        x_t_loss,
+        x_1_loss,
+        prob_loss,
+    ) = validate(model)
     accelerator.log(
         {
             "val_loss": l,

@@ -428,30 +428,35 @@ if not os.path.exists(f"{LOG_DIR}/{MODEL_NAME}"):
 accelerator.print("start training")
 start_time = time.time()
 start_epoch = START_EPOCH
+accelerator.print("after sync", (time.time() - start_time) / 60, "min")
+(
+    l,
+    x_t_loss,
+    x_1_loss,
+    prob_loss,
+) = validate(model)
+accelerator.log(
+    {
+        "val_loss": l,
+        "val_x_t_loss": x_t_loss,
+        "val_x_1_loss": x_1_loss,
+        "val_prob_loss": prob_loss,
+        #  'val_valid_token_loss': valid_token_loss,
+        #  'val_pad_loss': pad_loss
+    }
+)
+
 model.train()
+
+
+
 for epoch in range(start_epoch, EPOCH_NUM):
     accelerator.print(f"current epoch{epoch}")
     acc_x_t = 0
     acc_x_1 = 0
     acc_prob = 0
     acc_l = 0
-    accelerator.print("after sync", (time.time() - start_time) / 60, "min")
-    (
-        l,
-        x_t_loss,
-        x_1_loss,
-        prob_loss,
-    ) = validate(model)
-    accelerator.log(
-        {
-            "val_loss": l,
-            "val_x_t_loss": x_t_loss,
-            "val_x_1_loss": x_1_loss,
-            "val_prob_loss": prob_loss,
-            #  'val_valid_token_loss': valid_token_loss,
-            #  'val_pad_loss': pad_loss
-        }
-    )
+
     accelerator.print("the number of batchs is", len(train_loader))
     accelerator.print("before training", (time.time() - start_time) / 60, "min")
     for batch_num, x in tqdm(

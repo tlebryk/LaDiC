@@ -424,10 +424,10 @@ for epoch in range(start_epoch, EPOCH_NUM):
     accelerator.print("after saving", (time.time() - start_time) / 60, "min")
 
 accelerator.wait_for_everyone()
+unwrapped_model = accelerator.unwrap_model(model)
 if accelerator.is_local_main_process:
     final_model_dir = f"{LOG_DIR}/{MODEL_NAME}"
     os.makedirs(final_model_dir, exist_ok=True)
-
     # Save the model state dict as pytorch_model.bin
     torch.save(
         unwrapped_model.state_dict(), os.path.join(final_model_dir, "pytorch_model.bin")

@@ -42,7 +42,7 @@ data_config = {
 train_set, val_set, test_set = create_dataset("caption_coco", data_config)
 print(len(train_set), len(val_set), len(test_set))
 try:
-    print(f"{train_set[0]}, {val_set[0]}, {test_set[0]}")
+    print(f"{train_set[0]}, {val_set[0]}")
 except Exception as e:
     print(e)
 train_loader = DataLoader(

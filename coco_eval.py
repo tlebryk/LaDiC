@@ -104,7 +104,7 @@ def inference(x, tokenizer, model, time_difference=0):
         ]
         ans_strs = [original_str.strip(".").strip() + "." for original_str in ans_strs]
 
-    return ans_strs, x.get("img_id", [0] * x["image"].shape[0])
+    return ans_strs, x.get("img_id", torch.tensor([0] * x["image"].shape[0]))
 
 
 def model_evaluate(model, current_set, current_loader):

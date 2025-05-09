@@ -71,6 +71,46 @@ tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
 special = tokenizer(["."], return_tensors="pt")
 special_emb = model.space_encoder(special["input_ids"])[0][0][1]
 
+import pandas as pd
+import os
+from datetime import datetime
+
+# Create a logs directory if it doesn't exist
+log_dir = f"{LOG_DIR}/{MODEL_NAME}/logs"
+os.makedirs(log_dir, exist_ok=True)
+
+# Initialize empty log DataFrames
+train_logs = pd.DataFrame()
+val_logs = pd.DataFrame()
+
+
+# Function to log metrics to CSV
+def log_to_csv(metrics, step, is_validation=False):
+    global train_logs, val_logs
+
+    # Add step information
+    metrics_with_step = metrics.copy()
+    metrics_with_step["step"] = step
+
+    # Convert to DataFrame (single row)
+    metrics_df = pd.DataFrame([metrics_with_step])
+
+    # Append to the appropriate log DataFrame
+    if is_validation:
+        val_logs = pd.concat([val_logs, metrics_df], ignore_index=True)
+        val_logs.to_csv(f"{log_dir}/validation_logs.csv", index=False)
+    else:
+        train_logs = pd.concat([train_logs, metrics_df], ignore_index=True)
+        train_logs.to_csv(f"{log_dir}/training_logs.csv", index=False)
+
+
+# Initialize trackers but disable wandb
+# accelerator.init_trackers(
+#     "Diff-Cap",
+#     config=wandb_configs,
+#     init_kwargs={"wandb": {"mode": "disabled"}},  # Disable wandb logging
+# )
+
 
 def visualize_predictions(model, dataloader, num_samples=5):
     """
@@ -389,6 +429,18 @@ for epoch in range(start_epoch, EPOCH_NUM):
                     "pad_loss": pad_loss,
                 }
             )
+            log_metrics = {
+                "loss": l.item(),
+                "x_t_loss": x_t_loss.item(),
+                "x_1_loss": x_1_loss.item(),
+                "prob_loss": prob_loss.item(),
+                "valid_token_loss": valid_token_loss.item(),
+                "pad_loss": pad_loss.item(),
+                "epoch": epoch,
+                "batch": batch_num,
+                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            }
+            log_to_csv(log_metrics, epoch * len(train_loader) + batch_num)
 
         acc_x_t += x_t_loss
         acc_x_1 += x_1_loss
@@ -448,10 +500,10 @@ if accelerator.is_local_main_process:
 # model = model.to(accelerator.device)
 accelerator.print("Done!")
 if accelerator.is_local_main_process:
-    bleu = diffcap_eval.evaluate(model, val_set, val_loader)
-    accelerator.log({"bleu": bleu})
+    # bleu = diffcap_eval.evaluate(model, val_set, val_loader)
+    # accelerator.log({"bleu": bleu})
     model_evaluate(model, val_set, val_loader)
-    if not os.path.exists("result"):
-        os.makedirs("result", exist_ok=True)
-    coco_caption_eval("result/", f"result/{RESULT_FILE}.json", split="val")
+    # if not os.path.exists("result"):
+    #     os.makedirs("result", exist_ok=True)
+    # coco_caption_eval("result/", f"result/{RESULT_FILE}.json", split="val")
 accelerator.end_training()

@@ -163,9 +163,15 @@ parser.add_argument(
 )
 parser.add_argument(
     "image",
-    nargs="?",
+    # nargs="?",
     default="web.jpg",
     help=f"Path to the image file (default: 'web.jpg')",
+)
+parser.add_argument(
+    "full_model_path",
+    # nargs="?",
+    default=None,
+    help=f"full path to pytorch_model.bin to load existing model (not checkpoint)",
 )
 args = parser.parse_args()
 notes = args.notes
@@ -228,4 +234,5 @@ MODEL_NAME = f"{notes}_epoch{EPOCH_NUM}_maxlen_{MAX_LENGTH}_x_0_predict{X_0_PRED
 RESULT_FILE = f"{MODEL_NAME}_res"
 LOG_DIR = args.logdir
 IMAGE_PATH = args.image
+FULL_MODEL_PATH = args.full_model_path
 accelerator.print(f"trial name: {MODEL_NAME}")

@@ -482,18 +482,16 @@ for epoch in range(start_epoch, EPOCH_NUM):
             #  'val_pad_loss': pad_loss
         }
     )
-    log_metrics = {
+    # After validation, replace accelerator.log with:
+    val_metrics = {
         "val_loss": l,
         "val_x_t_loss": x_t_loss,
         "val_x_1_loss": x_1_loss,
         "val_prob_loss": prob_loss,
-        # "valid_token_loss": valid_token_loss,
-        # "pad_loss": pad_loss,
         "epoch": epoch,
-        "batch": batch_num,
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
     }
-    log_to_csv(log_metrics, epoch * len(train_loader) + batch_num)
+    log_to_csv(val_metrics, epoch * len(train_loader), is_validation=True)
     # unwrapped_model = accelerator.unwrap_model(model)
     # accelerator.save(unwrapped_model.state_dict(), f"./checkpoint/{MODEL_NAME}/epoch_{epoch}.pickle")
     # model = model.to(accelerator.device)

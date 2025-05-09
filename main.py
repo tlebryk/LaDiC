@@ -424,6 +424,8 @@ for epoch in range(start_epoch, EPOCH_NUM):
     accelerator.print("after saving", (time.time() - start_time) / 60, "min")
 
 accelerator.wait_for_everyone()
+accelerator.save_state(f"{LOG_DIR}/{MODEL_NAME}/")
+
 # unwrapped_model = accelerator.unwrap_model(model)
 # accelerator.save(unwrapped_model.state_dict(), f"./checkpoint/{MODEL_NAME}.pickle")
 # model = model.to(accelerator.device)

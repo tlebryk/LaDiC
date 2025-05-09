@@ -84,12 +84,21 @@ train_logs = pd.DataFrame()
 val_logs = pd.DataFrame()
 
 
+def safe_item(value):
+    if hasattr(value, "item"):
+        return value.item()
+    return value
+
+
+# Function to log metrics to CSV
+
+
 # Function to log metrics to CSV
 def log_to_csv(metrics, step, is_validation=False):
     global train_logs, val_logs
 
     # Add step information
-    metrics_with_step = metrics.copy()
+    metrics_with_step = {k: safe_item(v) for k, v in metrics.items()}
     metrics_with_step["step"] = step
 
     # Convert to DataFrame (single row)
@@ -430,12 +439,12 @@ for epoch in range(start_epoch, EPOCH_NUM):
                 }
             )
             log_metrics = {
-                "loss": l.item(),
-                "x_t_loss": x_t_loss.item(),
-                "x_1_loss": x_1_loss.item(),
-                "prob_loss": prob_loss.item(),
-                "valid_token_loss": valid_token_loss.item(),
-                "pad_loss": pad_loss.item(),
+                "loss": l,
+                "x_t_loss": x_t_loss,
+                "x_1_loss": x_1_loss,
+                "prob_loss": prob_loss,
+                "valid_token_loss": valid_token_loss,
+                "pad_loss": pad_loss,
                 "epoch": epoch,
                 "batch": batch_num,
                 "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),

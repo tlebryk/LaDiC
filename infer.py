@@ -13,7 +13,9 @@ from PIL import Image
 from torchvision import transforms
 from transformers import BertTokenizer
 
-from diff_models.diffcap_model import Diffuser_with_LN
+# from diff_models.diffcap_model import Diffuser_with_LN
+from diff_models.diffusion import *
+
 from my_utils.blip_util import load_checkpoint
 from coco_eval import inference
 

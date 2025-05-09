@@ -70,7 +70,6 @@ scheduler = get_linear_schedule_with_warmup(
 tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
 special = tokenizer(["."], return_tensors="pt")
 special_emb = model.space_encoder(special["input_ids"])[0][0][1]
-
 import pandas as pd
 import os
 from datetime import datetime
@@ -84,6 +83,7 @@ train_logs = pd.DataFrame()
 val_logs = pd.DataFrame()
 
 
+# Helper function to safely extract value from tensor or use directly if already a number
 def safe_item(value):
     if hasattr(value, "item"):
         return value.item()
@@ -91,13 +91,10 @@ def safe_item(value):
 
 
 # Function to log metrics to CSV
-
-
-# Function to log metrics to CSV
 def log_to_csv(metrics, step, is_validation=False):
     global train_logs, val_logs
 
-    # Add step information
+    # Add step information and convert tensors to python values
     metrics_with_step = {k: safe_item(v) for k, v in metrics.items()}
     metrics_with_step["step"] = step
 
@@ -108,9 +105,12 @@ def log_to_csv(metrics, step, is_validation=False):
     if is_validation:
         val_logs = pd.concat([val_logs, metrics_df], ignore_index=True)
         val_logs.to_csv(f"{log_dir}/validation_logs.csv", index=False)
+        print(f"Validation metrics saved at step {step}")
     else:
         train_logs = pd.concat([train_logs, metrics_df], ignore_index=True)
         train_logs.to_csv(f"{log_dir}/training_logs.csv", index=False)
+        if step % 50 == 0:  # Don't print too often
+            print(f"Training metrics saved at step {step}")
 
 
 # Initialize trackers but disable wandb
@@ -482,6 +482,18 @@ for epoch in range(start_epoch, EPOCH_NUM):
             #  'val_pad_loss': pad_loss
         }
     )
+    log_metrics = {
+        "val_loss": l,
+        "val_x_t_loss": x_t_loss,
+        "val_x_1_loss": x_1_loss,
+        "val_prob_loss": prob_loss,
+        # "valid_token_loss": valid_token_loss,
+        # "pad_loss": pad_loss,
+        "epoch": epoch,
+        "batch": batch_num,
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+    }
+    log_to_csv(log_metrics, epoch * len(train_loader) + batch_num)
     # unwrapped_model = accelerator.unwrap_model(model)
     # accelerator.save(unwrapped_model.state_dict(), f"./checkpoint/{MODEL_NAME}/epoch_{epoch}.pickle")
     # model = model.to(accelerator.device)

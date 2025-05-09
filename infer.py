@@ -73,8 +73,8 @@ tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
 
 # ─────────────────────────── main ────────────────────────────
 def main():
-    args = get_args()
-    img = prep(Image.open(args.image).convert("RGB")).unsqueeze(0).to(device)
+    # args = get_args()
+    img = prep(Image.open(IMAGE_PATH).convert("RGB")).unsqueeze(0).to(device)
 
     sample = {
         "image": img,

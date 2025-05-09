@@ -227,4 +227,5 @@ SELF_COND = args.self_cond
 MODEL_NAME = f"{notes}_epoch{EPOCH_NUM}_maxlen_{MAX_LENGTH}_x_0_predict{X_0_PREDICTION}__use_x_t{USE_X_T_LOSS}_use_x_1{USE_X_1_LOSS}_use_prob{USE_PROB_LOSS}"
 RESULT_FILE = f"{MODEL_NAME}_res"
 LOG_DIR = args.logdir
+IMAGE_PATH = args.image
 accelerator.print(f"trial name: {MODEL_NAME}")

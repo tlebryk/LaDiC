@@ -1,19 +1,20 @@
-accelerate==0.20.3
 beautifulsoup4==4.11.1
-bert-score==0.3.13
 einops==0.6.0
 evaluate==0.4.0
-fairscale==0.4.12
 protobuf==3.20.3 
-pycocoevalcap==1.2
-pycocotools==2.0.6
 safetensors==0.3.1
 scikit-learn==1.2.2
 scipy==1.10.1
 thinc==8.1.5
 threadpoolctl==3.1.0
-timm==0.6.12
-tokenizers==0.13.1
 tqdm==4.64.1
-transformers==4.30.2
 wandb==0.13.4
+# tokenizers==0.13.1 
+# transformers==4.30.2
+# accelerate==0.20.3
+# fairscale==0.4.12
+# timm==0.6.12
+# bert-score==0.3.13
+
+# pycocoevalcap==1.2
+# pycocotools==2.0.6

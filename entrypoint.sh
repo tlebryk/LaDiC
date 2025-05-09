@@ -12,9 +12,6 @@ cd LaDiC
 # source ~/.bashrc
 # export PATH=$HOME/miniconda/bin:$PATH
 
-apt update
-apt install -y rustc cargo build-essential unzip zip
-
 # conda env create -f ladic2.yaml
 # conda activate ladic
 # conda install -y pytorch==1.12.1 torchvision==0.13.1 torchaudio==0.12.1 cudatoolkit=11.3 -c pytorch
@@ -24,8 +21,11 @@ apt install -y rustc cargo build-essential unzip zip
 # pip install timm
 # pip install einops
 # pip install trasfromers
-cd /app
+# pip install fairscale
+# cd /app
+git pull
 pip install -r requirements.txt
+pip install torch==1.12.0+cu113 torchvision==0.13.0+cu113 torchaudio==0.12.0 --extra-index-url https://download.pytorch.org/whl/cu113
 pip install git+https://github.com/openai/CLIP.git
 
 pip install gdown
@@ -36,21 +36,18 @@ mkdir -p pretrained_ckpt
 wget -O pretrained_ckpt/model_base_capfilt_large.pth https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_capfilt_large.pth
 
 # python infer.py
-
-git pull
+cd /app/LaDiC
+apt-get update
+apt install -y
+# rustc cargo build-essential
+unzip zip
+pip install pycocotools
+pip install pycocoevalcap
 mkdir result
-wget https://raw.githubusercontent.com/tonybeltramelli/pix2code/master/datasets/pix2code_datasets.zip
-wget https://raw.githubusercontent.com/tonybeltramelli/pix2code/master/datasets/pix2code_datasets.z01
-wget https://raw.githubusercontent.com/tonybeltramelli/pix2code/master/datasets/pix2code_datasets.z02
-wget https://raw.githubusercontent.com/tonybeltramelli/pix2code/master/datasets/pix2code_datasets.z03
-wget https://raw.githubusercontent.com/tonybeltramelli/pix2code/master/datasets/pix2code_datasets.z04
-wget https://raw.githubusercontent.com/tonybeltramelli/pix2code/master/datasets/pix2code_datasets.z05
-wget https://raw.githubusercontent.com/tonybeltramelli/pix2code/master/datasets/pix2code_datasets.z06
-wget https://raw.githubusercontent.com/tonybeltramelli/pix2code/master/datasets/pix2code_datasets.z07
-wget https://raw.githubusercontent.com/tonybeltramelli/pix2code/master/datasets/pix2code_datasets.z08
-wget https://raw.githubusercontent.com/tonybeltramelli/pix2code/master/datasets/pix2code_datasets.z09
+wget https://raw.githubusercontent.com/tonybeltramelli/pix2code/master/datasets/pix2code_datasets.zip && wget https://raw.githubusercontent.com/tonybeltramelli/pix2code/master/datasets/pix2code_datasets.z{01..09}
+
 zip -F pix2code_datasets.zip --out datasets.zip
-unzip datasets.zip -d /app/datasets/COCO/
+unzip datasets.zip -d ./datasets/COCO/
 python create_ds.py
 
 # rm pix2code_datasets.zip

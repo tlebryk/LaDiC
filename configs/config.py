@@ -162,14 +162,14 @@ parser.add_argument(
     "--use_early_proj", type=bool, default=False, help="Use early projection"
 )
 parser.add_argument(
-    "image",
+    "--image",
     # nargs="?",
     default="web.jpg",
     required=False,
     help=f"Path to the image file (default: 'web.jpg')",
 )
 parser.add_argument(
-    "full_model_path",
+    "--full_model_path",
     # nargs="?",
     default=None,
     required=False,

@@ -30,12 +30,19 @@ wandb_configs = {
     "length": MAX_LENGTH,
 }
 
-# accelerator.init_trackers(
-#     "Diff-Cap",
-#     config=wandb_configs,
-#     init_kwargs={"wandb": {"name": notes, "entity": "tlebryk-harvard-university"}},
-# )  # , "entity": "xxx"}})
+if running_in_ipython_family():
 
+    accelerator.init_trackers(
+        "Diff-Cap",
+        config=wandb_configs,
+        init_kwargs={"wandb": {"mode": "disabled"}},  # Disable wandb logging
+    )
+else:
+    accelerator.init_trackers(
+        "Diff-Cap",
+        config=wandb_configs,
+        init_kwargs={"wandb": {"name": notes, "entity": "tlebryk-harvard-university"}},
+    )  # , "entity": "xxx"}})
 data_config = {
     "image_size": 224,
     "ann_root": "datasets/COCO/",
@@ -135,11 +142,6 @@ def log_to_csv(metrics, step, is_validation=False):
 
 
 # Initialize trackers but disable wandb
-# accelerator.init_trackers(
-#     "Diff-Cap",
-#     config=wandb_configs,
-#     init_kwargs={"wandb": {"mode": "disabled"}},  # Disable wandb logging
-# )
 
 
 def train_func(model, trainer, x, scheduler, train=True):

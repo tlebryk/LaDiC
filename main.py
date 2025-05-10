@@ -30,20 +30,42 @@ wandb_configs = {
     "length": MAX_LENGTH,
 }
 
-accelerator.init_trackers(
-    "Diff-Cap", config=wandb_configs, init_kwargs={"wandb": {"name": notes}}
-)  # , "entity": "xxx"}})
+# accelerator.init_trackers(
+#     "Diff-Cap",
+#     config=wandb_configs,
+#     init_kwargs={"wandb": {"name": notes, "entity": "tlebryk-harvard-university"}},
+# )  # , "entity": "xxx"}})
+import sys
 
-accelerator.init_trackers(  # launches wandb.init() for you
-    project_name="Diff-Cap",
-    config=vars(args),  # every CLI flag → W&B config tab
-    init_kwargs={
-        "wandb": {
-            "name": MODEL_NAME,  # run name in the UI
-            "entity": "tlebryk",  # or your team/org if you have one
-        }
-    },
-)
+
+def is_notebook() -> bool:
+    """True if running inside Jupyter/Colab, False in plain Python."""
+    try:
+        from IPython import get_ipython
+
+        shell = get_ipython().__class__.__name__
+        return shell in ("ZMQInteractiveShell", "Shell")  # Jupyter, Colab
+    except Exception:
+        return False
+
+
+import os
+
+if is_notebook():
+    # 100 % no-log, no warnings
+    os.environ["WANDB_MODE"] = "disabled"  # or "offline"
+    os.environ["WANDB_SILENT"] = "true"
+else:
+    accelerator.init_trackers(  # launches wandb.init() for you
+        project_name="Diff-Cap",
+        config=vars(args),  # every CLI flag → W&B config tab
+        init_kwargs={
+            "wandb": {
+                "name": MODEL_NAME,  # run name in the UI
+                "entity": "tlebryk",  # or your team/org if you have one
+            }
+        },
+    )
 
 
 data_config = {
@@ -80,7 +102,7 @@ def build_model():
         # )
         state = torch.load("pytorch_model.bin", map_location=device)
     model.load_state_dict(state, strict=False)
-    return model.to(device).eval()
+    return model  # .to(device).eval()
 
 
 if not USING_TIME_LN:
@@ -428,7 +450,9 @@ if accelerator.is_local_main_process:
     torch.save(
         unwrapped_model.state_dict(), os.path.join(final_model_dir, "pytorch_model.bin")
     )
-    wandb_run = accelerator.get_tracker("wandb")  # grab the underlying wandb Run
+    wandb_run = accelerator.get_tracker(
+        "wandb", unwrap=True
+    )  # grab the underlying wandb Run
     artifact = wandb.Artifact("diff-cap-ckpt", type="model", metadata={"epoch": epoch})
     artifact.add_file(os.path.join(final_model_dir, "pytorch_model.bin"))
     wandb_run.log_artifact(artifact)  # upload once per epoch

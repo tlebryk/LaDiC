@@ -8,9 +8,45 @@ from accelerate import Accelerator, InitProcessGroupKwargs
 from datetime import timedelta
 from transformers import BertTokenizer, BertForMaskedLM
 
+
+import sys
+
+
+def is_notebook() -> bool:
+    """True if running inside Jupyter/Colab, False in plain Python."""
+    try:
+        from IPython import get_ipython
+
+        shell = get_ipython().__class__.__name__
+        return shell in ("ZMQInteractiveShell", "Shell")  # Jupyter, Colab
+    except Exception:
+        return False
+
+
+import os
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 init_kwargs = InitProcessGroupKwargs(timeout=timedelta(seconds=120 * 60))
-accelerator = Accelerator(kwargs_handlers=[init_kwargs], log_with=["wandb"])
+
+if is_notebook():
+    # 100 % no-log, no warnings
+    os.environ["WANDB_MODE"] = "disabled"  # or "offline"
+    os.environ["WANDB_SILENT"] = "true"
+    accelerator = Accelerator(kwargs_handlers=[init_kwargs])
+
+else:
+    accelerator = Accelerator(kwargs_handlers=[init_kwargs], log_with=["wandb"])
+
+    # accelerator.init_trackers(  # launches wandb.init() for you
+    #     project_name="Diff-Cap",
+    #     config=vars(args),  # every CLI flag → W&B config tab
+    #     init_kwargs={
+    #         "wandb": {
+    #             "name": MODEL_NAME,  # run name in the UI
+    #             "entity": "tlebryk",  # or your team/org if you have one
+    #         }
+    #     },
+    # )
 
 
 # helper functions

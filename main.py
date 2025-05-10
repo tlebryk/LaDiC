@@ -35,38 +35,6 @@ wandb_configs = {
 #     config=wandb_configs,
 #     init_kwargs={"wandb": {"name": notes, "entity": "tlebryk-harvard-university"}},
 # )  # , "entity": "xxx"}})
-import sys
-
-
-def is_notebook() -> bool:
-    """True if running inside Jupyter/Colab, False in plain Python."""
-    try:
-        from IPython import get_ipython
-
-        shell = get_ipython().__class__.__name__
-        return shell in ("ZMQInteractiveShell", "Shell")  # Jupyter, Colab
-    except Exception:
-        return False
-
-
-import os
-
-if is_notebook():
-    # 100 % no-log, no warnings
-    os.environ["WANDB_MODE"] = "disabled"  # or "offline"
-    os.environ["WANDB_SILENT"] = "true"
-else:
-    accelerator.init_trackers(  # launches wandb.init() for you
-        project_name="Diff-Cap",
-        config=vars(args),  # every CLI flag → W&B config tab
-        init_kwargs={
-            "wandb": {
-                "name": MODEL_NAME,  # run name in the UI
-                "entity": "tlebryk",  # or your team/org if you have one
-            }
-        },
-    )
-
 
 data_config = {
     "image_size": 224,
@@ -105,10 +73,10 @@ def build_model():
     return model  # .to(device).eval()
 
 
-if not USING_TIME_LN:
-    model = Diffuser(image_size=224)
-else:
-    model = build_model()
+# if not USING_TIME_LN:
+#     model = Diffuser(image_size=224)
+# else:
+model = build_model()
 optimizer = optim.AdamW(
     filter(lambda p: p.requires_grad, model.parameters()), lr=LEARNING_RATE
 )

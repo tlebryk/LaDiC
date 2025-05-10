@@ -49,10 +49,12 @@ def build_model():
 def main():
     # args = get_args()
     model = build_model()
-    tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+    model.eval().to(device)
     # %%
     from PIL import Image
     from torchvision import transforms
+
+    tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
 
     prep = transforms.Compose(
         [
@@ -66,8 +68,6 @@ def main():
             ),
         ]
     )
-
-    img = prep(Image.open(IMAGE_PATH).convert("RGB")).unsqueeze(0).to(device)
     img = (
         prep(
             Image.open(
@@ -77,6 +77,8 @@ def main():
         .unsqueeze(0)
         .to(device)
     )
+
+    img = prep(Image.open(IMAGE_PATH).convert("RGB")).unsqueeze(0).to(device)
 
     sample = {
         "image": img,

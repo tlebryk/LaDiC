@@ -257,7 +257,7 @@ def train_func(model, trainer, x, scheduler, train=True):
     return l, x_t_loss, x_1_loss, prob_loss, valid_token_loss, pad_loss
 
 
-def validate(model):
+def validate(model, epoch=None):
     val_acc_x_t = 0
     val_acc_x_1 = 0
     val_acc_prob = 0
@@ -270,6 +270,38 @@ def validate(model):
             # try:
             if batch_num == 0:
                 z = inference(x, tokenizer, model)
+
+                # Save z to a file if epoch is specified
+                if epoch is not None and accelerator.is_local_main_process:
+                    # Create directories if they don't exist
+                    os.makedirs(f"{LOG_DIR}/{MODEL_NAME}/inferences", exist_ok=True)
+
+                    # Save inference output to file
+                    z_filename = (
+                        f"{LOG_DIR}/{MODEL_NAME}/inferences/epoch_{epoch}_inference.txt"
+                    )
+                    with open(z_filename, "w", encoding="utf-8") as f:
+                        # Ensure z is a string
+                        if not isinstance(z, str):
+                            z_str = str(z)
+                        else:
+                            z_str = z
+                        f.write(z_str)
+
+                    # Save x['text'] to a file if it exists
+                    if "text" in x:
+                        os.makedirs(f"{LOG_DIR}/{MODEL_NAME}/texts", exist_ok=True)
+                        text_filename = (
+                            f"{LOG_DIR}/{MODEL_NAME}/texts/epoch_{epoch}_text.txt"
+                        )
+                        with open(text_filename, "w", encoding="utf-8") as f:
+                            # Handle different formats of x['text']
+                            if isinstance(x["text"], list):
+                                text_str = "\n".join(x["text"])
+                            else:
+                                text_str = str(x["text"])
+                            f.write(text_str)
+
                 print(z)
             l, x_t_loss, x_1_loss, prob_loss, valid_token_loss, pad_loss = train_func(
                 model, optimizer, x, scheduler, train=False
@@ -405,6 +437,25 @@ for epoch in range(start_epoch, EPOCH_NUM):
     }
     log_to_csv(val_metrics, epoch * len(train_loader), is_validation=True)
     accelerator.print(val_metrics)
+
+    # Upload artifacts at the end of each epoch
+    if accelerator.is_local_main_process:
+        wandb_run = accelerator.get_tracker("wandb", unwrap=True)
+
+        # Upload inference artifact
+        z_filename = f"{LOG_DIR}/{MODEL_NAME}/inferences/epoch_{epoch}_inference.txt"
+        if os.path.exists(z_filename):
+            z_artifact = wandb.Artifact(f"inference_epoch_{epoch}", type="text")
+            z_artifact.add_file(z_filename)
+            wandb_run.log_artifact(z_artifact)
+
+        # Upload text artifact
+        text_filename = f"{LOG_DIR}/{MODEL_NAME}/texts/epoch_{epoch}_text.txt"
+        if os.path.exists(text_filename):
+            text_artifact = wandb.Artifact(f"text_epoch_{epoch}", type="text")
+            text_artifact.add_file(text_filename)
+            wandb_run.log_artifact(text_artifact)
+
     # unwrapped_model = accelerator.unwrap_model(model)
     # accelerator.save(unwrapped_model.state_dict(), f"./checkpoint/{MODEL_NAME}/epoch_{epoch}.pickle")
     # model = model.to(accelerator.device)

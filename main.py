@@ -22,6 +22,7 @@ from transformers import get_linear_schedule_with_warmup
 from transformers import get_constant_schedule_with_warmup
 from transformers import get_cosine_schedule_with_warmup
 from my_utils.detr_object import get_detr_objects
+import wandb
 
 wandb_configs = {
     "epochs": EPOCH_NUM,
@@ -32,6 +33,17 @@ wandb_configs = {
 accelerator.init_trackers(
     "Diff-Cap", config=wandb_configs, init_kwargs={"wandb": {"name": notes}}
 )  # , "entity": "xxx"}})
+
+accelerator.init_trackers(  # launches wandb.init() for you
+    project_name="Diff-Cap",
+    config=vars(args),  # every CLI flag → W&B config tab
+    init_kwargs={
+        "wandb": {
+            "name": MODEL_NAME,  # run name in the UI
+            "entity": "tlebryk",  # or your team/org if you have one
+        }
+    },
+)
 
 
 data_config = {
@@ -138,128 +150,6 @@ def log_to_csv(metrics, step, is_validation=False):
 #     config=wandb_configs,
 #     init_kwargs={"wandb": {"mode": "disabled"}},  # Disable wandb logging
 # )
-
-
-def visualize_predictions(model, dataloader, num_samples=5):
-    """
-    Generate and print predictions for a few samples from the dataloader.
-    """
-    # Set model to eval mode
-    model.eval()
-
-    # Get device
-    device = accelerator.device
-
-    # Get a batch from the dataloader
-    batch_iter = iter(dataloader)
-    batch = next(batch_iter)
-
-    # Move batch to the correct device if not already done by accelerator
-    if not isinstance(batch["image"], torch.Tensor) or batch["image"].device != device:
-        batch = {
-            k: v.to(device) if isinstance(v, torch.Tensor) else v
-            for k, v in batch.items()
-        }
-
-    # Only take a few samples for visualization
-    batch = {
-        k: v[:num_samples] if isinstance(v, torch.Tensor) else v
-        for k, v in batch.items()
-    }
-
-    with torch.no_grad():
-        # Run diffusion sampling process
-        images = batch["image"]
-
-        # Initialize with noise
-        seq_len = MAX_LENGTH
-        batch_size = images.shape[0]
-
-        # Start from pure noise (x_T)
-        shape = (batch_size, seq_len, model.embed_dim)
-        x_t = torch.randn(shape, device=device)
-
-        # Sampling loop - reverse diffusion process
-        for t in tqdm(range(STEP_TOT - 1, -1, -1), desc="Sampling"):
-            t_tensor = torch.full((batch_size,), t, device=device, dtype=torch.long)
-
-            # If using self-conditioning, initialize the second half of input
-            x_self_cond = torch.zeros_like(x_t)
-
-            # Predict noise and get model output
-            with torch.no_grad():
-                # Get model prediction
-                model_output = model(
-                    images,
-                    torch.cat([x_t, x_self_cond], dim=-1),
-                    batch["attention_mask"],
-                    t_tensor,
-                )
-
-                # Update x_t using model prediction - this depends on your diffusion scheduler
-                # Example update step (adjust based on your specific diffusion process):
-                if t > 0:
-                    noise = torch.randn_like(x_t)
-                    x_t = sample_posterior(model, x_t, t_tensor, model_output, noise)
-                else:
-                    x_t = model_output
-
-        # Denormalize if needed
-        x_0_pred = x_t * X_SIGMA.to(device) + X_MEAN.to(device)
-
-        # Convert embeddings to token IDs using nearest neighbors
-        # This depends on how your model works, but here's a generic approach:
-        token_embeddings = model.space_encoder.embeddings.word_embeddings.weight
-
-        # For each position in each sequence, find the closest token embedding
-        token_ids = []
-        for i in range(batch_size):
-            sequence_tokens = []
-            for j in range(seq_len):
-                # Skip special tokens if needed
-                if batch["attention_mask"][i, j] == 0:
-                    sequence_tokens.append(0)  # PAD token ID
-                    continue
-
-                # Find closest token embedding
-                distances = torch.norm(
-                    token_embeddings - x_0_pred[i, j].unsqueeze(0), dim=1
-                )
-                closest_token = torch.argmin(distances).item()
-                sequence_tokens.append(closest_token)
-
-            token_ids.append(sequence_tokens)
-
-        # Convert to tensor
-        pred_ids = torch.tensor(token_ids, device=device)
-
-        # Decode using tokenizer
-        predictions = []
-        for ids in pred_ids:
-            text = tokenizer.decode(ids, skip_special_tokens=True)
-            predictions.append(text)
-
-        # Print results
-        print("\n===== Generated Captions =====")
-        for i, pred in enumerate(predictions):
-            if i < len(batch["text"]):
-                gt = (
-                    batch["text"][i]
-                    if isinstance(batch["text"], list)
-                    else batch["text"][i].item()
-                )
-                print(f"Image {i+1}:")
-                print(f"Ground truth: {gt}")
-                print(f"Prediction: {pred}")
-                print("-" * 50)
-            else:
-                print(f"Image {i+1}:")
-                print(f"Prediction: {pred}")
-                print("-" * 50)
-
-    # Set model back to train mode
-    model.train()
-    return predictions
 
 
 def train_func(model, trainer, x, scheduler, train=True):
@@ -538,6 +428,10 @@ if accelerator.is_local_main_process:
     torch.save(
         unwrapped_model.state_dict(), os.path.join(final_model_dir, "pytorch_model.bin")
     )
+    wandb_run = accelerator.get_tracker("wandb")  # grab the underlying wandb Run
+    artifact = wandb.Artifact("diff-cap-ckpt", type="model", metadata={"epoch": epoch})
+    artifact.add_file(os.path.join(final_model_dir, "pytorch_model.bin"))
+    wandb_run.log_artifact(artifact)  # upload once per epoch
 
     # Optionally, if it's a HuggingFace model and has a config, you can save that too
     # if hasattr(unwrapped_model, 'config'):

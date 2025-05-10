@@ -10,7 +10,7 @@ from transformers import BertTokenizer, BertForMaskedLM
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 init_kwargs = InitProcessGroupKwargs(timeout=timedelta(seconds=120 * 60))
-accelerator = Accelerator(kwargs_handlers=[init_kwargs])
+accelerator = Accelerator(kwargs_handlers=[init_kwargs], log_with=["wandb"])
 
 
 # helper functions

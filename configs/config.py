@@ -12,14 +12,27 @@ from transformers import BertTokenizer, BertForMaskedLM
 import sys
 
 
-def is_notebook() -> bool:
-    """True if running inside Jupyter/Colab, False in plain Python."""
+import os
+
+
+def running_in_ipython_family() -> bool:
+    """
+    True  → IPython terminal, Jupyter, Colab, Spyder, etc.
+    False → Standard CPython interpreter (batch / cron / cluster job)
+    """
     try:
         from IPython import get_ipython
 
-        shell = get_ipython().__class__.__name__
-        return shell in ("ZMQInteractiveShell", "Shell")  # Jupyter, Colab
-    except Exception:
+        ipy = get_ipython()
+        if ipy is None:  # not inside IPython at all
+            return False
+
+        shell_name = ipy.__class__.__name__
+        # • TerminalInteractiveShell  → `ipython` CLI               (IPython docs)¹
+        # • ZMQInteractiveShell       → Jupyter / Colab kernel      (SO answer)²
+        # • Other InteractiveShell…   → future front-ends
+        return shell_name.endswith("InteractiveShell")
+    except ImportError:
         return False
 
 
@@ -28,7 +41,8 @@ import os
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 init_kwargs = InitProcessGroupKwargs(timeout=timedelta(seconds=120 * 60))
 
-if is_notebook():
+if running_in_ipython_family():
+
     # 100 % no-log, no warnings
     os.environ["WANDB_MODE"] = "disabled"  # or "offline"
     os.environ["WANDB_SILENT"] = "true"

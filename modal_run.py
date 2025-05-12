@@ -80,9 +80,10 @@ image2 = (
     # .add_local_file("test.json", remote_path="/root/test.json")
     # .add_local_python_source("llada", "llada_train", "eval_helper")
 )
+app2 = modal.App("example-a1111-webui", image=image)
 
 
-@app.function(
+@app2.function(
     image=image2,
     secrets=[modal.Secret.from_name("wandb-secret")],  # <-- injects env var
     gpu="L4",

@@ -23,6 +23,7 @@ from transformers import get_constant_schedule_with_warmup
 from transformers import get_cosine_schedule_with_warmup
 from my_utils.detr_object import get_detr_objects
 import wandb
+import infer
 
 wandb_configs = {
     "epochs": EPOCH_NUM,
@@ -60,6 +61,10 @@ train_loader = DataLoader(
 val_loader = DataLoader(
     val_set, shuffle=False, batch_size=VAL_BATCH_SIZE, drop_last=True, num_workers=2
 )
+
+test_loader = DataLoader(
+    test_set, shuffle=False, batch_size=VAL_BATCH_SIZE, drop_last=True, num_workers=2
+)
 PRETRAINED_DIR = "pretrained_ckpt"
 
 
@@ -70,13 +75,13 @@ def build_model():
     )
     if FULL_MODEL_PATH:
         state = torch.load(FULL_MODEL_PATH, map_location=device)
+        model.load_state_dict(state, strict=False)
     else:
         # final_model_dir = f"{LOG_DIR}/{MODEL_NAME}"
         # state = torch.load(
         #     os.path.join(final_model_dir, "pytorch_model.bin"), map_location=device
         # )
         state = torch.load("pytorch_model.bin", map_location=device)
-    model.load_state_dict(state, strict=False)
     return model  # .to(device).eval()
 
 
@@ -436,6 +441,7 @@ for epoch in range(start_epoch, EPOCH_NUM):
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
     }
     log_to_csv(val_metrics, epoch * len(train_loader), is_validation=True)
+    accelerator.log(val_metrics)
     accelerator.print(val_metrics)
 
     # Upload artifacts at the end of each epoch
@@ -459,8 +465,25 @@ for epoch in range(start_epoch, EPOCH_NUM):
     # unwrapped_model = accelerator.unwrap_model(model)
     # accelerator.save(unwrapped_model.state_dict(), f"./checkpoint/{MODEL_NAME}/epoch_{epoch}.pickle")
     # model = model.to(accelerator.device)
-    accelerator.save_state(f"{LOG_DIR}/{MODEL_NAME}/acc_epoch_{epoch}/")
-    accelerator.print("after saving", (time.time() - start_time) / 60, "min")
+    if epoch % SAVE_EPOCHS == 0:
+        accelerator.save_state(f"{LOG_DIR}/{MODEL_NAME}/acc_epoch_{epoch}/")
+        accelerator.print("after saving", (time.time() - start_time) / 60, "min")
+        # Also save to wandb
+        if accelerator.is_local_main_process:
+            # Get the unwrapped model
+            unwrapped_model = accelerator.unwrap_model(model)
+
+            # Save model checkpoint for wandb
+            checkpoint_path = (
+                f"{LOG_DIR}/{MODEL_NAME}/acc_epoch_{epoch}/pytorch_model.bin"
+            )
+            torch.save(unwrapped_model.state_dict(), checkpoint_path)
+
+            # Log to wandb as an artifact
+            wandb_run = accelerator.get_tracker("wandb", unwrap=True)
+            artifact = wandb.Artifact(f"diff-cap-ckpt-epoch-{epoch}", type="checkpoint")
+            artifact.add_file(checkpoint_path)
+            wandb_run.log_artifact(artifact)
 
 accelerator.wait_for_everyone()
 unwrapped_model = accelerator.unwrap_model(model)
@@ -474,7 +497,7 @@ if accelerator.is_local_main_process:
     wandb_run = accelerator.get_tracker(
         "wandb", unwrap=True
     )  # grab the underlying wandb Run
-    artifact = wandb.Artifact("diff-cap-ckpt", type="model", metadata={"epoch": epoch})
+    artifact = wandb.Artifact("diff-cap-ckpt", type="model")
     artifact.add_file(os.path.join(final_model_dir, "pytorch_model.bin"))
     wandb_run.log_artifact(artifact)  # upload once per epoch
 
@@ -489,9 +512,17 @@ if accelerator.is_local_main_process:
 # model = model.to(accelerator.device)
 accelerator.print("Done!")
 if accelerator.is_local_main_process:
+    results, metrics = infer.run_inference_on_dataset(model, val_loader, tokenizer)
+    accelerator.log(metrics)
+
+    infer.save_results(results, metrics, f"result/{RESULT_FILE}.json")
+    artifact = wandb.Artifact("diff-cap-results", type="results")
+    artifact.add_file(f"result/{RESULT_FILE}.json")
+    wandb_run.log_artifact(artifact)  # upload once per epoch
+
     # bleu = diffcap_eval.evaluate(model, val_set, val_loader)
     # accelerator.log({"bleu": bleu})
-    model_evaluate(model, val_set, val_loader)
+    # model_evaluate(model, val_set, val_loader)
     # if not os.path.exists("result"):
     #     os.makedirs("result", exist_ok=True)
     # coco_caption_eval("result/", f"result/{RESULT_FILE}.json", split="val")

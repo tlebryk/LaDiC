@@ -41,26 +41,17 @@ import os
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 init_kwargs = InitProcessGroupKwargs(timeout=timedelta(seconds=120 * 60))
 
-if running_in_ipython_family():
 
-    # 100 % no-log, no warnings
-    os.environ["WANDB_MODE"] = "disabled"  # or "offline"
-    os.environ["WANDB_SILENT"] = "true"
-    accelerator = Accelerator(kwargs_handlers=[init_kwargs])
-
-else:
-    accelerator = Accelerator(kwargs_handlers=[init_kwargs], log_with=["wandb"])
-
-    # accelerator.init_trackers(  # launches wandb.init() for you
-    #     project_name="Diff-Cap",
-    #     config=vars(args),  # every CLI flag → W&B config tab
-    #     init_kwargs={
-    #         "wandb": {
-    #             "name": MODEL_NAME,  # run name in the UI
-    #             "entity": "tlebryk",  # or your team/org if you have one
-    #         }
-    #     },
-    # )
+# accelerator.init_trackers(  # launches wandb.init() for you
+#     project_name="Diff-Cap",
+#     config=vars(args),  # every CLI flag → W&B config tab
+#     init_kwargs={
+#         "wandb": {
+#             "name": MODEL_NAME,  # run name in the UI
+#             "entity": "tlebryk",  # or your team/org if you have one
+#         }
+#     },
+# )
 
 
 # helper functions
@@ -225,6 +216,20 @@ parser.add_argument(
     # required=False,
     help=f"full path to pytorch_model.bin to load existing model (not checkpoint)",
 )
+parser.add_argument(
+    "--mixed_precison",
+    # nargs="?",
+    default="fp16",
+    # required=False,
+    help="fp16 or bf16",
+)
+parser.add_argument(
+    "--save_epochs",
+    # nargs="?",
+    default=5,
+    # required=False,
+    help="Save model every n epochs",
+)
 args = parser.parse_args()
 notes = args.notes
 
@@ -287,4 +292,20 @@ RESULT_FILE = f"{MODEL_NAME}_res"
 LOG_DIR = args.logdir
 IMAGE_PATH = args.image
 FULL_MODEL_PATH = args.full_model_path
+MIXED_PRECISION = args.mixed_precison
+SAVE_EPOCHS = args.save_epochs
+if running_in_ipython_family():
+
+    # 100 % no-log, no warnings
+    os.environ["WANDB_MODE"] = "disabled"  # or "offline"
+    os.environ["WANDB_SILENT"] = "true"
+    accelerator = Accelerator(kwargs_handlers=[init_kwargs])
+
+else:
+    accelerator = Accelerator(
+        kwargs_handlers=[init_kwargs],
+        log_with=["wandb"],
+        mixed_precision=MIXED_PRECISION,  # Add this line
+    )
+
 accelerator.print(f"trial name: {MODEL_NAME}")

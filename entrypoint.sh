@@ -36,11 +36,11 @@ mkdir -p pretrained_ckpt
 wget -O pretrained_ckpt/model_base_capfilt_large.pth https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_capfilt_large.pth
 
 # python infer.py
-cd /app/LaDiC
+cd /app/LaDiC && git stash && git pull
+# git stash && git pull
 apt-get update
-apt install -y
+apt install -y unzip zip
 # rustc cargo build-essential
-unzip zip
 pip install pycocotools
 pip install pycocoevalcap
 mkdir result

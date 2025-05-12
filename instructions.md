@@ -36,7 +36,7 @@ Make sure you have a secret wandb-secret with your wandb key.
 
 Run training (see readme and configs.py for hyperparameters).
 ```bash
-modal shell modal_run.py::train --le
+modal run modal_run.py::train --le
 ```
 
 Open a shell

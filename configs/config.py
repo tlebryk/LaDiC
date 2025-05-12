@@ -226,7 +226,7 @@ parser.add_argument(
 parser.add_argument(
     "--save_epochs",
     # nargs="?",
-    default=5,
+    default=10,
     # required=False,
     help="Save model every n epochs",
 )

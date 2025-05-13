@@ -237,7 +237,7 @@ def main():
     img = (
         prep(
             Image.open(
-                "datasets/COCO/web/all_data/024D233C-5B4A-4096-9145-94C2CCDEF0CD.png"
+                "datasets/web/all_data/0B660875-60B4-4E65-9793-3C7EB6C8AFD0.png"
             ).convert("RGB")
         )
         .unsqueeze(0)

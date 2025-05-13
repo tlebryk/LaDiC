@@ -6,12 +6,14 @@ from transformers import BertTokenizer
 
 from dataload.coco_karpathy_dataset import coco_karpathy_train, coco_karpathy_caption_eval
 from dataload.para_cap_dataset import para_train, para_eval
+from dataload.websight_html_dataset import websight_html_train, websight_html_eval
 
 # from transform.randaugment import RandomAugment
 
 
-def create_dataset(dataset, config, min_scale=0.5):
-    tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+def create_dataset(dataset, config, min_scale=0.5, tokenizer=None):
+    if tokenizer is None:
+        tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
     normalize = transforms.Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711))
 
     transform_train = transforms.Compose([
@@ -48,7 +50,14 @@ def create_dataset(dataset, config, min_scale=0.5):
         train_dataset = coco_karpathy_train(transform_train, tokenizer, image_root=config['image_root'], ann_root=config['ann_root'])
         val_dataset = coco_karpathy_caption_eval(transform_test, tokenizer, image_root=config['image_root'], ann_root=config['ann_root'], split='val')
         test_dataset = coco_karpathy_caption_eval(transform_test, tokenizer, image_root=config['image_root'], ann_root=config['ann_root'], split='test')
-        
+        return train_dataset, val_dataset, test_dataset
+    elif dataset=='websight_html':
+        # Use the new websight_html specific loaders
+        train_dataset = websight_html_train(transform_train, tokenizer, image_root=config['image_root'], ann_root=config['ann_root'])
+        val_dataset = websight_html_eval(transform_test, tokenizer, image_root=config['image_root'], ann_root=config['ann_root'], split='val')
+        test_dataset = websight_html_eval(transform_test, tokenizer, image_root=config['image_root'], ann_root=config['ann_root'], split='test')
+        return train_dataset, val_dataset, test_dataset
+
 
 def create_sampler(datasets, shuffles, num_tasks, global_rank):
     samplers = []

@@ -233,6 +233,19 @@ parser.add_argument(
     # required=False,
     help="Save model every n epochs",
 )
+parser.add_argument(
+    "--html_tokenizer_path",
+    type=str,
+    default=None,
+    help="Path to the HTML tokenizer.json file",
+)
+parser.add_argument(
+    "--retrain_with_html_tokenizer",
+    type=bool,
+    default=False,
+    help="Whether to retrain the model with the HTML tokenizer",
+)
+
 args = parser.parse_args()
 notes = args.notes
 
@@ -290,6 +303,8 @@ RESUME_FILE = args.resume_ckpt
 VAR_DILATION = args.var_dilate
 VAR_DILATION_VAL = args.var_dilate_val
 SELF_COND = args.self_cond
+HTML_TOKENIZER_PATH = args.html_tokenizer_path
+RETRAIN_WITH_HTML_TOKENIZER = args.retrain_with_html_tokenizer
 MODEL_NAME = f"{notes}_epoch{EPOCH_NUM}_maxlen_{MAX_LENGTH}_x_0_predict{X_0_PREDICTION}__use_x_t{USE_X_T_LOSS}_use_x_1{USE_X_1_LOSS}_use_prob{USE_PROB_LOSS}"
 RESULT_FILE = f"{MODEL_NAME}_res"
 LOG_DIR = args.logdir

@@ -24,6 +24,8 @@ from transformers import get_cosine_schedule_with_warmup
 from my_utils.detr_object import get_detr_objects
 import wandb
 import infer
+from transformers import PreTrainedTokenizerFast
+from transformers import BertTokenizer
 
 wandb_configs = {
     "epochs": EPOCH_NUM,
@@ -34,39 +36,18 @@ wandb_configs = {
 if running_in_ipython_family():
 
     accelerator.init_trackers(
-        "Diff-Cap",
+        "LaDiC",
         config=wandb_configs,
         init_kwargs={"wandb": {"mode": "disabled"}},  # Disable wandb logging
     )
 else:
     accelerator.init_trackers(
-        "Diff-Cap",
+        "LaDiC",
         config=wandb_configs,
         init_kwargs={"wandb": {"name": notes, "entity": "tlebryk-harvard-university"}},
     )  # , "entity": "xxx"}})
-data_config = {
-    "image_size": 224,
-    "ann_root": "datasets/COCO/",
-    "image_root": "datasets/COCO/web/all_data",
-}
-train_set, val_set, test_set = create_dataset("caption_coco", data_config)
-print(len(train_set), len(val_set), len(test_set))
-try:
-    print(f"{train_set[0]}, {val_set[0]}")
-except Exception as e:
-    print(e)
-train_loader = DataLoader(
-    train_set, shuffle=True, batch_size=TRAIN_BATCH_SIZE, drop_last=True, num_workers=32
-)
-val_loader = DataLoader(
-    val_set, shuffle=False, batch_size=VAL_BATCH_SIZE, drop_last=True, num_workers=2
-)
 
-test_loader = DataLoader(
-    test_set, shuffle=False, batch_size=VAL_BATCH_SIZE, drop_last=True, num_workers=2
-)
 PRETRAINED_DIR = "pretrained_ckpt"
-
 
 def build_model():
     model = Diffuser_with_LN(image_size=224)
@@ -85,10 +66,96 @@ def build_model():
     return model  # .to(device).eval()
 
 
-# if not USING_TIME_LN:
-#     model = Diffuser(image_size=224)
-# else:
 model = build_model()
+
+
+# Load either BERT tokenizer or HTML tokenizer based on config
+if HTML_TOKENIZER_PATH and os.path.exists(HTML_TOKENIZER_PATH):
+    print(f"Loading HTML tokenizer from {HTML_TOKENIZER_PATH}")
+    tokenizer = PreTrainedTokenizerFast(
+        tokenizer_file=HTML_TOKENIZER_PATH,
+        bos_token="<s>",
+        eos_token="</s>",
+        unk_token="<unk>",
+        pad_token="<pad>",
+        mask_token="<mask>",
+    )
+    # If we're using the HTML tokenizer, ensure we're retraining the model
+    if RETRAIN_WITH_HTML_TOKENIZER:
+        print("Initializing model for training with HTML tokenizer")
+
+        # Get the current model's embeddings
+        current_embed = model.space_encoder.embeddings.word_embeddings
+
+        # Create a new embedding layer with the HTML tokenizer's vocabulary size
+        html_vocab_size = len(tokenizer.get_vocab())
+        print(f"HTML tokenizer vocabulary size: {html_vocab_size}")
+
+        # Initialize a new embedding layer with the same embedding dimension but new vocab size
+        new_embeddings = nn.Embedding(html_vocab_size, current_embed.embedding_dim)
+
+
+        # Copy over embeddings for tokens that exist in both vocabularies
+        # This helps maintain semantic meaning for common tokens
+        bert_tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+        bert_vocab = bert_tokenizer.get_vocab()
+        html_vocab = tokenizer.get_vocab()
+
+        # First, initialize with random weights
+        nn.init.normal_(new_embeddings.weight, mean=0.0, std=0.02)
+
+        # Then copy over embeddings for common tokens
+        copied_tokens = 0
+        for token, html_idx in html_vocab.items():
+            if token in bert_vocab:
+                bert_idx = bert_vocab[token]
+                if bert_idx < current_embed.num_embeddings:
+                    new_embeddings.weight.data[html_idx] = current_embed.weight.data[
+                        bert_idx
+                    ]
+                    copied_tokens += 1
+
+        print(
+            f"Copied embeddings for {copied_tokens} tokens that exist in both vocabularies"
+        )
+        # Replace the model's word embeddings with our new embeddings
+        model.space_encoder.embeddings.word_embeddings = new_embeddings
+
+        # Ensure the embeddings are not trained
+        model.space_encoder.embeddings.word_embeddings.requires_grad_(False)
+
+        print(
+            "Space encoder embeddings have been initialized with HTML tokenizer vocabulary"
+        )
+
+else:
+    print("Using default BERT tokenizer")
+    tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+
+# Now initialize dataset with the loaded tokenizer
+data_config = {
+    "image_size": 224,
+    "ann_root": "datasets/websight/",
+    "image_root": "datasets/websight/all_data",
+}
+train_set, val_set, test_set = create_dataset("websight_html", data_config, tokenizer=tokenizer)
+print(len(train_set), len(val_set), len(test_set))
+try:
+    print(f"{train_set[0]}, {val_set[0]}")
+except Exception as e:
+    print(e)
+train_loader = DataLoader(
+    train_set, shuffle=True, batch_size=TRAIN_BATCH_SIZE, drop_last=True, num_workers=32
+)
+val_loader = DataLoader(
+    val_set, shuffle=False, batch_size=VAL_BATCH_SIZE, drop_last=True, num_workers=2
+)
+
+test_loader = DataLoader(
+    test_set, shuffle=False, batch_size=VAL_BATCH_SIZE, drop_last=True, num_workers=2
+)
+
+
 optimizer = optim.AdamW(
     filter(lambda p: p.requires_grad, model.parameters()), lr=LEARNING_RATE
 )
@@ -100,7 +167,6 @@ scheduler = get_linear_schedule_with_warmup(
 # scheduler = get_cosine_schedule_with_warmup(optimizer, num_warmup_steps=num_step * WARMUP_RATIO,
 #                                            num_training_steps=num_step, num_cycles=2)
 
-tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
 special = tokenizer(["."], return_tensors="pt")
 special_emb = model.space_encoder(special["input_ids"])[0][0][1]
 import pandas as pd

@@ -25,7 +25,7 @@ COPY requirements.txt /app/LaDiC
 
 # Create conda environment and install packages
 RUN pip install --no-cache-dir -r requirements.txt && \
-pip install --no-cache-dir accelerate==0.20.3 fairscale==0.4.12 timm==0.6.12 bert-score==0.3.13 tokenizers==0.13.1 transformers==4.30.2 gdown pycocotools pycocoevalcap
+    pip install --no-cache-dir accelerate==0.20.3 fairscale==0.4.12 timm==0.6.12 bert-score==0.3.13 tokenizers==0.13.1 transformers==4.30.2 gdown pycocotools pycocoevalcap
 # pip install torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cu126
 # pip install --no-cache-dir torch==1.12.0+cu113 torchvision==0.13.0+cu113 torchaudio==0.12.0 --extra-index-url https://download.pytorch.org/whl/cu113 && \
 

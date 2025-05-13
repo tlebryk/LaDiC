@@ -7,26 +7,45 @@ import torch.distributed as dist
 
 import my_utils
 
-def pre_caption(caption,max_words=50):
-    caption = re.sub(
-        r"([!\"()*#:;~])",
-        ' ',
-        caption.lower(),
-    )
-    caption = re.sub(
-        r"\s{2,}",
-        ' ',
-        caption,
-    )
-    caption = caption.rstrip('\n') 
-    caption = caption.strip(' ')
+# TODO(ItamarRocha): Double check this
+def pre_caption(caption, max_words=50, is_html=False):
+    """
+    Pre-process text captions.
+    For HTML content (is_html=True), we preserve the special characters 
+    that are important for the syntax (< > : ; ! = " etc.)
+    For normal captions, we apply standard text cleaning.
+    """
+    if is_html:
+        # For HTML content - preserve syntax but do some basic cleanup
+        caption = caption.rstrip('\n') 
+        caption = caption.strip()
+        
+        # Don't split by words for HTML - it might break the syntax
+        # Just truncate if there's a max_words limit (usually handled by tokenizer truncation separately)
+        if max_words > 0 and len(caption) > max_words * 5:  # rough estimate of chars per word
+            caption = caption[:max_words * 5]  # Simple character-based truncation
+        return caption
+    else:
+        # Standard text cleaning for normal captions
+        caption = re.sub(
+            r"([!\"()*#:;~])",
+            ' ',
+            caption.lower(),
+        )
+        caption = re.sub(
+            r"\s{2,}",
+            ' ',
+            caption,
+        )
+        caption = caption.rstrip('\n') 
+        caption = caption.strip(' ')
 
-    #truncate caption
-    caption_words = caption.split(' ')
-    if len(caption_words)>max_words:
-        caption = ' '.join(caption_words[:max_words])
-            
-    return caption
+        #truncate caption
+        caption_words = caption.split(' ')
+        if len(caption_words)>max_words:
+            caption = ' '.join(caption_words[:max_words])
+                
+        return caption
 
 def pre_question(question,max_ques_words=50):
     question = re.sub(

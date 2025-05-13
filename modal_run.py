@@ -42,6 +42,10 @@ def train():
             # "fp16",
             "--full_model_path",
             "pytorch_model.bin",
+            "--html_tokenizer_path",
+            "html_tokenizer/output/tokenizer.json",
+            "--retrain_with_html_tokenizer",
+            "True",
         ],
         check=True,
     )
@@ -73,7 +77,7 @@ image2 = (
         "pycocotools",
         "pycocoevalcap",
     )
-    .add_local_dir("./", remote_path="./")
+    .add_local_dir("./", remote_path="/root/")
     # .add_local_dir("configs", remote_path="/root/configs")
     # .add_local_file("train.json", remote_path="/root/train.json")
     # .add_local_file("val.json", remote_path="/root/val.json")
